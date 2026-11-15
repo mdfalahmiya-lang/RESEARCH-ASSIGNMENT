@@ -1,0 +1,12 @@
+grid 8x8, V = 64 , max localised distance to dock = 14 hops
+Theory: reachable belief states <= sum_{j<=k} C(64,j) (actions never grow a belief)
+
+| k | trials | naive-plan success | blind: beliefs generated | blind: plan len | sensor: beliefs generated | sensor: worst-case plan len | k=1 single-state BFS len | bound sum_{j<=k}C(64,j) |
+|---|---|---|---|---|---|---|---|---|
+| 2 | 10 | 50% | 1396.2 (10/10 solvable) | 11.2 | 3.2 (10/10) | 9.9 | 9.9 (max single dist) | 2,080 |
+| 4 | 10 | 25% | 86797.7 (10/10 solvable) | 10.7 | 11.0 (10/10) | 9.1 | 9.1 (max single dist) | 679,120 |
+| 8 | 10 | 12% | n/a (0/10 solvable) | n/a | 43.2 (10/10) | 12.0 | 12.0 (max single dist) | 5,130,659,560 |
+
+Worked example k=4: possible junctions [2, 13, 56, 62]
+blind (no sensor) shortest conditional-free plan: SWWNNNNNWWNWWN  length 14
+with sensor: worst-case plan length 13

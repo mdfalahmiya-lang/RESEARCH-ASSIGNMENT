@@ -1,0 +1,108 @@
+## 1A. Size of the KB as a function of n (derived: symbols 4n², sentences 2 + 2n² + percepts, models 2^(4n²))
+
+| n | symbols m = 4n² | sentences (2 + 2n² + 3 percepts) | models 2^m | counted symbols | counted sentences |
+|---|---|---|---|---|---|
+| 2 | 16 | 13 | 65,536 | 16 | 13 |
+| 3 | 36 | 23 | 68,719,476,736 | 36 | 23 |
+| 4 | 64 | 37 | 18,446,744,073,709,551,616 | 64 | 37 |
+
+## 1B. Truth-table entailment: full symbol set vs relevant-symbol restriction
+Percepts: ¬B_1_1, ¬S_1_1, B_2_1.  Each query is classified by two checks (KB |= α, KB |= ¬α).
+
+| n | symbols used | query | verdict | models enumerated | sentence evaluations | time s |
+|---|---|---|---|---|---|---|
+| 2 | full (16) | ¬P_1_2  ("(1,2) has no pit") | entailed | 65,671 | 131,445 | 0.02 |
+| 2 | full (16) | P_2_1  ("(2,1) has a pit") | negation entailed | 65,671 | 131,445 | 0.02 |
+| 2 | full (16) | W_2_2  ("wumpus in (2,2)") | neither | 34,574 | 70,140 | 0.01 |
+| 2 | relevant (10) | ¬P_1_2  ("(1,2) has no pit") | entailed | 1,059 | 2,128 | 0.001 |
+| 2 | relevant (10) | P_2_1  ("(2,1) has a pit") | negation entailed | 1,059 | 2,128 | 0.001 |
+| 2 | relevant (11) | W_2_2  ("wumpus in (2,2)") | neither | 1,094 | 2,230 | 0.001 |
+| 3 | full (36) | ¬P_1_2  ("(1,2) has no pit") | INFEASIBLE: 2^36 = 68,719,476,736 models | - | - | - |
+| 3 | full (36) | P_2_1  ("(2,1) has a pit") | INFEASIBLE: 2^36 = 68,719,476,736 models | - | - | - |
+| 3 | full (36) | W_2_2  ("wumpus in (2,2)") | INFEASIBLE: 2^36 = 68,719,476,736 models | - | - | - |
+| 3 | relevant (11) | ¬P_1_2  ("(1,2) has no pit") | entailed | 2,083 | 4,154 | 0.001 |
+| 3 | relevant (11) | P_2_1  ("(2,1) has a pit") | negation entailed | 2,083 | 4,154 | 0.001 |
+| 3 | relevant (12) | W_2_2  ("wumpus in (2,2)") | neither | 2,118 | 4,256 | 0.001 |
+| 4 | full (64) | ¬P_1_2  ("(1,2) has no pit") | INFEASIBLE: 2^64 = 18,446,744,073,709,551,616 models | - | - | - |
+| 4 | full (64) | P_2_1  ("(2,1) has a pit") | INFEASIBLE: 2^64 = 18,446,744,073,709,551,616 models | - | - | - |
+| 4 | full (64) | W_2_2  ("wumpus in (2,2)") | INFEASIBLE: 2^64 = 18,446,744,073,709,551,616 models | - | - | - |
+| 4 | relevant (11) | ¬P_1_2  ("(1,2) has no pit") | entailed | 2,083 | 4,154 | 0.001 |
+| 4 | relevant (11) | P_2_1  ("(2,1) has a pit") | negation entailed | 2,083 | 4,154 | 0.001 |
+| 4 | relevant (12) | W_2_2  ("wumpus in (2,2)") | neither | 2,118 | 4,256 | 0.001 |
+
+Measured throughput ≈ 3,129,314 models/s, so the full n=3 set (2^36 = 6.9e10 models) would take ≈ 6.1 hours (best case, with early exit per model) and n=4 (2^64) ≈ 1.9e+05 years: infeasible in practice.
+
+## 1C. Part B - derivations with inference rules instead of model checking (n = 3)
+
+* Square (1,2) safe (¬P ∧ ¬W) derived: **True**
+* Square (2,1) safe (¬P ∧ ¬W) derived: **True**
+* Square (2,2) safe (¬P ∧ ¬W) derived: **True**
+* Total unit-resolution steps to saturate the KB: 12.  Derivation log:
+
+   - Unit Resolution: clause {-P_2_1, B_1_1} with unit(s) -B_1_1  ⊢  -P_2_1
+   - Unit Resolution: clause {-P_1_2, B_1_1} with unit(s) -B_1_1  ⊢  -P_1_2
+   - Unit Resolution: clause {-W_2_1, S_1_1} with unit(s) -S_1_1  ⊢  -W_2_1
+   - Unit Resolution: clause {-W_1_2, S_1_1} with unit(s) -S_1_1  ⊢  -W_1_2
+   - Unit Resolution: clause {-P_2_2, B_1_2} with unit(s) -B_1_2  ⊢  -P_2_2
+   - Unit Resolution: clause {-P_1_3, B_1_2} with unit(s) -B_1_2  ⊢  -P_1_3
+   - Unit Resolution: clause {-W_2_2, S_1_2} with unit(s) -S_1_2  ⊢  -W_2_2
+   - Unit Resolution: clause {-W_1_3, S_1_2} with unit(s) -S_1_2  ⊢  -W_1_3
+   - Unit Resolution: clause {-B_2_1, P_1_1, P_2_2, P_3_1} with unit(s) -P_1_1, -P_2_2, B_2_1  ⊢  P_3_1
+   - Unit Resolution: clause {-P_3_1, B_3_2} with unit(s) P_3_1  ⊢  B_3_2
+
+Inference-rule cost for each query (resolution steps for the two literals + 1 And-Introduction) vs model checking on the relevant symbols:
+
+| query | rule steps | model-checking models (relevant symbols) |
+|---|---|---|
+| safe(1,2) (entailed = True) | 3 | 65,536 |
+| safe(2,1) (entailed = True) | 3 | 65,536 |
+| safe(2,2) (entailed = True) | 3 | 65,536 |
+
+## 1D. Soundness truth tables (every row where all premises are true must make the conclusion true)
+
+**Modus Ponens (P⇒Q, P ⊢ Q)**
+
+| P | Q | premises all true? | conclusion | sound on this row |
+|---|---|---|---|---|
+| 1 | 1 | 1 | 1 | ✓ |
+| 1 | 0 | 0 | 0 | ✓ |
+| 0 | 1 | 0 | 1 | ✓ |
+| 0 | 0 | 0 | 0 | ✓ |
+
+Sound: **True**
+
+**And-Elimination (P∧Q ⊢ P)**
+
+| P | Q | premises all true? | conclusion | sound on this row |
+|---|---|---|---|---|
+| 1 | 1 | 1 | 1 | ✓ |
+| 1 | 0 | 0 | 1 | ✓ |
+| 0 | 1 | 0 | 0 | ✓ |
+| 0 | 0 | 0 | 0 | ✓ |
+
+Sound: **True**
+
+**Unit Resolution (P∨Q, ¬P ⊢ Q)**
+
+| P | Q | premises all true? | conclusion | sound on this row |
+|---|---|---|---|---|
+| 1 | 1 | 0 | 1 | ✓ |
+| 1 | 0 | 0 | 0 | ✓ |
+| 0 | 1 | 1 | 1 | ✓ |
+| 0 | 0 | 0 | 0 | ✓ |
+
+Sound: **True**
+
+**Biconditional-Elimination (P⇔Q ⊢ (P⇒Q)∧(Q⇒P))**
+
+| P | Q | premises all true? | conclusion | sound on this row |
+|---|---|---|---|---|
+| 1 | 1 | 1 | 1 | ✓ |
+| 1 | 0 | 0 | 0 | ✓ |
+| 0 | 1 | 0 | 0 | ✓ |
+| 0 | 0 | 1 | 1 | ✓ |
+
+Sound: **True**
+
+"Not derived" is not "false": under percepts ¬B11, ¬S11, B21 (n=3), neither P_2_2 nor ¬P_2_2 is derivable, and enumeration finds KB-models of both kinds:
+models of the KB with P_2_2 true: 2; with P_2_2 false: 1  → KB ⊭ P_2_2 and KB ⊭ ¬P_2_2.

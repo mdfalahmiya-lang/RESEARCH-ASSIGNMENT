@@ -1,0 +1,95 @@
+## 2A. Policy KB (13 rules; implication, biconditional, disjunction). Symbols: access, afterpass, alarm, badge, emergency, escort, forced, intrusion, lockdown, maint, supervisor, unlock, visitor, work 
+
+R1: ((badge ∧ work ∧ ¬visitor) ⇒ access)
+R2: ((visitor ∧ escort ∧ work) ⇒ access)
+R3: (emergency ⇒ access)
+R4: (access ⇔ unlock)
+R5: ((lockdown ∧ ¬emergency) ⇒ ¬unlock)
+R6: (visitor ⇒ (escort ∨ ¬access))
+R7: (alarm ⇒ (intrusion ∨ forced ∨ emergency))
+R8: (intrusion ⇒ lockdown)
+R9: ((¬work ∧ badge ∧ ¬visitor ∧ (supervisor ∨ afterpass)) ⇒ access)
+R10: (maint ⇒ (escort ∨ badge))
+R11: (forced ⇒ ¬badge)
+R12: ((access ∧ ¬emergency) ⇒ ¬lockdown)
+R13: (alarm ⇔ (intrusion ∨ forced))
+
+### Hand-checkable CNF conversions (stage log from the program)
+
+**R4**
+
+- original: `(access ⇔ unlock)`
+- eliminate ⇔ and ⇒: `((¬access ∨ unlock) ∧ (¬unlock ∨ access))`
+- push ¬ inward (NNF): `((¬access ∨ unlock) ∧ (¬unlock ∨ access))`
+- distribute ∨ over ∧ → clauses: `{-access, unlock} ∧ {-unlock, access}`
+
+**R7**
+
+- original: `(alarm ⇒ (intrusion ∨ forced ∨ emergency))`
+- eliminate ⇔ and ⇒: `(¬alarm ∨ (intrusion ∨ forced ∨ emergency))`
+- push ¬ inward (NNF): `(¬alarm ∨ (intrusion ∨ forced ∨ emergency))`
+- distribute ∨ over ∧ → clauses: `{-alarm, emergency, forced, intrusion}`
+
+**R9**
+
+- original: `((¬work ∧ badge ∧ ¬visitor ∧ (supervisor ∨ afterpass)) ⇒ access)`
+- eliminate ⇔ and ⇒: `(¬(¬work ∧ badge ∧ ¬visitor ∧ (supervisor ∨ afterpass)) ∨ access)`
+- push ¬ inward (NNF): `((work ∨ ¬badge ∨ visitor ∨ (¬supervisor ∧ ¬afterpass)) ∨ access)`
+- distribute ∨ over ∧ → clauses: `{-badge, -supervisor, access, visitor, work} ∧ {-afterpass, -badge, access, visitor, work}`
+
+Whole KB in CNF: 17 clauses over 14 symbols.
+
+### Entailed query: staff with a valid badge, in working hours ⊨ door unlocked
+
+result: entailed (empty clause derived); clauses generated 17, resolvents attempted 22
+
+```
+[] (empty clause)   [resolve on visitor]
+  {visitor}   [resolve on work]
+    {-work, visitor}   [resolve on badge]
+      {-badge, -work, visitor}   [resolve on access]
+        {-badge, -work, access, visitor}   [input]
+        {-access}   [resolve on unlock]
+          {-access, unlock}   [input]
+          {-unlock}   [input]
+      {badge}   [input]
+    {work}   [input]
+  {-visitor}   [input]
+```
+
+### Non-entailed query: a visitor in working hours ⊨ door unlocked ?
+
+result: NOT entailed: the clause set saturated (no new clauses) without the empty clause; generated 391, attempted 939, tautologies 158, subsumed 393.
+Why it terminates: clauses over k symbols are subsets of 2k literals, at most 3^k non-tautological clauses; every resolvent is new and finite, so the generation of new clauses must stop.
+
+Model checking on the same entailed query: entailed = True, models enumerated 16,384 (2^14 = 16,384).
+
+## 2B. Implication chains p0, p0⇒p1, …, p_{n-1}⇒p_n, query p_n (resolution refutation vs model checking)
+
+| n | method | outcome | clauses generated | resolvents attempted | tautologies discarded | subsumed removed | time s |
+|---|---|---|---|---|---|---|---|
+| 10 | resolution (fifo) | proved | 66 | 153 | 0 | 34 | 0.002 |
+| 10 | resolution (shortest) | proved | 12 | 12 | 0 | 10 | 0.000 |
+| 10 | model checking | entailed | models: 2048 | - | - | - | 0.0 |
+| 20 | resolution (fifo) | proved | 231 | 908 | 0 | 119 | 0.002 |
+| 20 | resolution (shortest) | proved | 22 | 22 | 0 | 20 | 0.000 |
+| 20 | model checking | entailed | models: 2097152 | - | - | - | 0.217 |
+| 40 | resolution (fifo) | proved | 861 | 6,180 | 0 | 445 | 0.014 |
+| 40 | resolution (shortest) | proved | 42 | 42 | 0 | 40 | 0.001 |
+| 40 | model checking | INFEASIBLE (2^41 = 2,199,023,255,552 models) | models: - | - | - | - | 0.0 |
+| 80 | resolution (fifo) | proved | 3,321 | 45,368 | 0 | 1,721 | 0.098 |
+| 80 | resolution (shortest) | proved | 82 | 82 | 0 | 80 | 0.001 |
+| 80 | model checking | INFEASIBLE (2^81 = 2,417,851,639,229,258,349,412,352 models) | models: - | - | - | - | 0.0 |
+
+## 2C. KB families that favour each method
+
+| KB family | symbols | method | outcome | work | time s |
+|---|---|---|---|---|---|
+| pigeonhole PHP(4,3) (unsatisfiable) | 12 | model checking | unsat | 4,096 models | 0.00 |
+| pigeonhole PHP(4,3) | 12 | resolution (fifo) | refuted | 60,322 generated, 824,543 attempted | 3.50 |
+| pigeonhole PHP(4,3) | 12 | resolution (shortest) | refuted | 2,140 generated, 6,235 attempted | 0.02 |
+| pigeonhole PHP(5,4) (unsatisfiable) | 20 | model checking | unsat | 1,048,576 models | 0.26 |
+| pigeonhole PHP(5,4) | 20 | resolution (fifo) | GAVE UP (cap/time) | 150,001 generated, 373,958 attempted | 1.36 |
+| pigeonhole PHP(5,4) | 20 | resolution (shortest) | GAVE UP (cap/time) | 150,001 generated, 633,195 attempted | 2.25 |
+| chain n=20 | 21 | model checking | entailed | 2,097,152 models | 0.22 |
+| chain n=20 | 21 | resolution (shortest) | proved | 22 generated, 22 attempted | 0.033 |

@@ -1,0 +1,65 @@
+## 7B. Experimental validation. 50,000 patients, 208,441 patient facts (seed 5), built in 0.4 s
+
+### 7B-1. The 31 hand-built test cases on the 2,000-rule KB (expected vs actual; all three sizes are summarised below)
+
+| case | expected verdict | actual verdict | expected reasons | actual reasons | explanation lines | pass | latency ms |
+|---|---|---|---|---|---|---|---|
+| D01 warfarin + new aspirin | UNSAFE | UNSAFE | interaction:aspirin:warfarin | interaction:aspirin:warfarin | 2 | ✓ | 0.32 |
+| D02 sertraline + new tramadol | UNSAFE | UNSAFE | interaction:tramadol:sertraline | interaction:tramadol:sertraline | 2 | ✓ | 0.26 |
+| D03 penicillin allergy + amoxicillin | UNSAFE | UNSAFE | allergy:amoxicillin:penicillin_allergy | allergy:amoxicillin:penicillin_allergy | 2 | ✓ | 0.12 |
+| D04 renal failure + ibuprofen | UNSAFE | UNSAFE | condition:ibuprofen:renal_failure | condition:ibuprofen:renal_failure | 2 | ✓ | 0.19 |
+| D05 child + aspirin | UNSAFE | UNSAFE | age:aspirin:child | age:aspirin:child | 2 | ✓ | 0.22 |
+| D06 elderly on warfarin + aspirin | UNSAFE | UNSAFE | combo:aspirin:bleed_elderly, interaction:aspirin:warfarin | combo:aspirin:bleed_elderly, interaction:aspirin:warfarin | 5 | ✓ | 0.19 |
+| D07 bleeding disorder + warfarin | UNSAFE | UNSAFE | condition:warfarin:bleeding_disorder | condition:warfarin:bleeding_disorder | 2 | ✓ | 0.14 |
+| D08 pregnancy + lisinopril | UNSAFE | UNSAFE | condition:lisinopril:pregnancy | condition:lisinopril:pregnancy | 2 | ✓ | 0.09 |
+| D09 epilepsy + tramadol | UNSAFE | UNSAFE | condition:tramadol:epilepsy | condition:tramadol:epilepsy | 2 | ✓ | 0.14 |
+| D10 already on ibuprofen + ibuprofen | UNSAFE | UNSAFE | duplicate:ibuprofen:same_drug | duplicate:ibuprofen:same_drug | 2 | ✓ | 0.22 |
+| D11 lisinopril + renal failure + ibuprofen | UNSAFE | UNSAFE | combo:ibuprofen:nephro, condition:ibuprofen:renal_failure, interaction:ibuprofen:lisinopril | combo:ibuprofen:nephro, condition:ibuprofen:renal_failure, interaction:ibuprofen:lisinopril | 7 | ✓ | 0.20 |
+| D12 ulcer + warfarin + NSAID allergy + ibuprofen | UNSAFE | UNSAFE | allergy:ibuprofen:nsaid_allergy, condition:ibuprofen:peptic_ulcer, interaction:ibuprofen:warfarin | allergy:ibuprofen:nsaid_allergy, condition:ibuprofen:peptic_ulcer, interaction:ibuprofen:warfarin | 6 | ✓ | 0.28 |
+| S01 healthy adult + metformin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.13 |
+| S02 on lisinopril + amoxicillin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.11 |
+| S03 penicillin allergy + aspirin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.22 |
+| S04 on sertraline + metformin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.12 |
+| S05 elderly + lisinopril | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.09 |
+| S06 child + amoxicillin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.09 |
+| S07 on aspirin + sertraline | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.08 |
+| S08 epilepsy + aspirin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.17 |
+| S09 on metformin + ibuprofen | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.22 |
+| S10 pregnancy + amoxicillin | NO KNOWN CONTRAINDICATION | NO KNOWN CONTRAINDICATION | - | - | 0 | ✓ | 0.10 |
+| E01 no record at all + aspirin | INSUFFICIENT DATA | INSUFFICIENT DATA | - | - | 0 | ✓ | 0.01 |
+| E02 elderly on aspirin + warfarin | UNSAFE | UNSAFE | combo:warfarin:bleed_elderly, interaction:warfarin:aspirin | combo:warfarin:bleed_elderly, interaction:warfarin:aspirin | 5 | ✓ | 0.15 |
+| E03 drug without any rule | UNKNOWN DRUG | UNKNOWN DRUG | - | - | 0 | ✓ | 0.02 |
+| E04 NSAID allergy + aspirin | UNSAFE | UNSAFE | allergy:aspirin:nsaid_allergy | allergy:aspirin:nsaid_allergy | 2 | ✓ | 0.18 |
+| E05 polypharmacy elderly + ibuprofen | UNSAFE | UNSAFE | age:ibuprofen:elderly, allergy:ibuprofen:nsaid_allergy, combo:ibuprofen:nephro, condition:ibuprofen:peptic_ulcer, condition:ibuprofen:renal_failure, interaction:ibuprofen:lisinopril, interaction:ibuprofen:warfarin | age:ibuprofen:elderly, allergy:ibuprofen:nsaid_allergy, combo:ibuprofen:nephro, condition:ibuprofen:peptic_ulcer, condition:ibuprofen:renal_failure, interaction:ibuprofen:lisinopril, interaction:ibuprofen:warfarin | 15 | ✓ | 0.33 |
+| E06 elderly on sertraline + tramadol | UNSAFE | UNSAFE | age:tramadol:elderly, interaction:tramadol:sertraline | age:tramadol:elderly, interaction:tramadol:sertraline | 4 | ✓ | 0.19 |
+| E07 child + tramadol | UNSAFE | UNSAFE | age:tramadol:child | age:tramadol:child | 2 | ✓ | 0.13 |
+| E08 renal failure on lisinopril + metformin | UNSAFE | UNSAFE | combo:metformin:lactic, condition:metformin:renal_failure | combo:metformin:lactic, condition:metformin:renal_failure | 5 | ✓ | 0.10 |
+| E09 adult on warfarin + amoxicillin + liver disease | UNSAFE | UNSAFE | combo:amoxicillin:inr_liver | combo:amoxicillin:inr_liver | 3 | ✓ | 0.12 |
+
+Example explanation (case D11, 2,000-rule KB):
+
+```
+Unsafe(T10,ibuprofen) because rule combo:ibuprofen:nephro fires:
+    Takes(T10,lisinopril)  [fact in record]
+    HasCondition(T10,renal_failure)  [fact in record]
+Unsafe(T10,ibuprofen) because rule condition:ibuprofen:renal_failure fires:
+    HasCondition(T10,renal_failure)  [fact in record]
+Unsafe(T10,ibuprofen) because rule interaction:ibuprofen:lisinopril fires:
+    Takes(T10,lisinopril)  [fact in record]
+```
+
+### 7B-2. Metrics by KB size
+
+| rules | drugs covered | build time s | memory MB (patients + rules) | test cases passed | mean latency ms (indexed BC) | max latency ms | mean unifications / query | mean goals / query | mean explanation lines (cases with reasons) | oracle agreement (300 random) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 40 | 8 | 0.53 | 35 | 31/31 | 0.14 | 0.33 | 12.4 | 8.5 | 3.8 | 300/300 |
+| 400 | 44 | 0.72 | 35 | 31/31 | 0.14 | 0.34 | 12.4 | 8.5 | 3.8 | 300/300 |
+| 2,000 | 204 | 0.68 | 36 | 31/31 | 0.16 | 0.33 | 12.4 | 8.5 | 3.8 | 300/300 |
+
+### 7B-3. Baseline comparison (mean per query over the same test cases)
+
+| rules | design: indexed BC ms | baseline 1: rules not indexed ms (unifications) | baseline 2: nothing indexed, one case, ms (unifications) | baseline 3: forward chaining per query ms (rule firings) | FC answers correct |
+|---|---|---|---|---|---|
+| 40 | 0.14 | 0.45 (44) | 1049 (648,980) | 0.1 (7) | 30/30 |
+| 400 | 0.14 | 3.44 (381) | 1047 (649,376) | 1.0 (24) | 30/30 |
+| 2,000 | 0.16 | 20.72 (1878) | 1047 (651,136) | 5.0 (70) | 30/30 |
